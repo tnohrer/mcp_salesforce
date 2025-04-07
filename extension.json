@@ -1,0 +1,84 @@
+{
+    "name": "mcp_salesforce",
+    "display_name": "MCP Salesforce",
+    "version": "0.1.0",
+    "description": "Salesforce integration for Goose - Read-only operations",
+    "author": "Block, Inc.",
+    "license": "MIT",
+    "command": "/Users/tristannohrer/Desktop/mcp_salesforce/.venv/bin/python -m mcp_salesforce.server",
+    "requirements": {
+        "python": ">=3.9",
+        "packages": [
+            "simple-salesforce>=1.12.5",
+            "keyring>=24.3.0"
+        ]
+    },
+    "tools": [
+        {
+            "name": "mcp_salesforce_login",
+            "description": "Login to Salesforce.",
+            "parameters": {
+                "environment": {
+                    "type": "string",
+                    "description": "Environment to login to",
+                    "required": false
+                }
+            }
+        },
+        {
+            "name": "mcp_salesforce_handle_oauth",
+            "description": "Handle OAuth callback.",
+            "parameters": {
+                "callback_url": {
+                    "type": "string",
+                    "description": "The full OAuth callback URL",
+                    "required": true
+                }
+            }
+        },
+        {
+            "name": "mcp_salesforce_query",
+            "description": "Execute a SOQL query.",
+            "parameters": {
+                "soql": {
+                    "type": "string",
+                    "description": "The SOQL query to execute",
+                    "required": true
+                }
+            }
+        },
+        {
+            "name": "mcp_salesforce_search",
+            "description": "Execute a SOSL search.",
+            "parameters": {
+                "search_term": {
+                    "type": "string",
+                    "description": "The search term to use",
+                    "required": true
+                }
+            }
+        },
+        {
+            "name": "mcp_salesforce_logout",
+            "description": "Logout from Salesforce."
+        }
+    ],
+    "url_schemes": [
+        {
+            "scheme": "goose",
+            "path": "extension/mcp_salesforce/oauth2/callback",
+            "description": "OAuth callback for Salesforce login",
+            "handler": "mcp_salesforce_handle_oauth",
+            "command": "mcp_salesforce_handle_oauth",
+            "name": "oauth_callback",
+            "display_name": "OAuth Callback Handler",
+            "parameters": {
+                "callback_url": {
+                    "type": "string",
+                    "description": "The OAuth callback URL",
+                    "required": true
+                }
+            }
+        }
+    ]
+}

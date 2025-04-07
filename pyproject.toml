@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp_salesforce"
+version = "0.1.0"
+description = "Salesforce integration for Goose - Read-only operations"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    { name = "Block", email = "goose@block.xyz" }
+]
+keywords = ["salesforce", "crm", "oauth", "api"]
+dependencies = [
+    "simple-salesforce>=1.12.5",
+    "keyring>=24.3.0",
+    "mcp>=0.1.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/squareup/mcp"
+Repository = "https://github.com/squareup/mcp"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_salesforce"]

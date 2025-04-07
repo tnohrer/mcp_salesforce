@@ -1,7 +1,7 @@
-# GooseForceOAuth
+# MCP Salesforce AKA > GooseForce
 
 A Salesforce OAuth extension for Goose that allows secure authentication with Salesforce orgs.
-Auther: Tristan Nohrer
+Author: Tristan Nohrer
 
 ## Features
 - Secure OAuth 2.0 implementation
@@ -36,7 +36,30 @@ Auther: Tristan Nohrer
 4. Share the Consumer Key with your team
 
 ### For Users
-1. Install the Goose extension
+
+#### Method 1: Manual Installation (Current)
+1. Clone the repository:
+```bash
+git clone https://github.com/tnohrer/mcp_salesforce.git
+```
+
+2. Install dependencies:
+```bash
+cd mcp_salesforce
+python -m venv .venv
+source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+3. Configure the extension in Goose:
+   - Add the extension path to your Goose configuration
+   - First time setup:
+     - Enter the Consumer Key provided by your admin
+     - Select sandbox or production environment
+     - Authorize the application
+
+#### Method 2: Extension Manager Installation (Coming Soon)
+1. Install the extension through Goose Desktop's Extension Manager
 2. First time setup:
    - Enter the Consumer Key provided by your admin
    - Select sandbox or production environment
@@ -48,21 +71,96 @@ Auther: Tristan Nohrer
 - Goose Desktop Application
 - Access to a Salesforce org
 
-## Installation
-```bash
-# Clone the repository
-git clone https://github.com/tnohrer/GooseForceOAuth.git
+## Project Structure and File Overview
 
-# Install dependencies
-pip install -r requirements.txt
+### Key Files
+```
+/mcp_salesforce/
+├── Info.plist              # macOS configuration file
+├── README.md              # Project documentation
+├── extension.json         # Extension configuration
+├── pyproject.toml        # Project dependencies and metadata
+├── requirements.txt      # Python package requirements
+├── run.py               # Extension entry point
+└── src/
+    └── mcp_salesforce/
+        ├── __init__.py
+        ├── __main__.py
+        ├── auth_state.py          # Authentication state management
+        ├── config_handler.py      # Configuration management
+        ├── environment_selector.py # Environment selection UI
+        ├── login_handler.py       # OAuth flow management
+        ├── query_validator.py     # Query validation and safety
+        ├── salesforce.py          # Core Salesforce interaction
+        ├── server.py              # FastMCP integration
+        └── templates/             # UI templates
+            ├── environment_selector.html
+            └── oauth_callback.html
 ```
 
-## Security
+### Core Components
+
+1. **Server Components** (`server.py`)
+   - Main extension implementation using FastMCP
+   - Tool registration and endpoint handling
+   - Response formatting and error management
+
+2. **Salesforce Integration** (`salesforce.py`)
+   - Core Salesforce API interaction
+   - Query execution and result processing
+   - API connection management
+
+3. **Authentication System**
+   - `auth_state.py`: Manages authentication state and sessions
+   - `login_handler.py`: Implements OAuth flow
+   - `environment_selector.py`: Provides environment selection UI
+   - Templates for login and callback pages
+
+4. **Query Management** (`query_validator.py`)
+   - Query validation and safety checks
+   - DML operation prevention
+   - Query limitations enforcement
+   - Syntax validation
+
+5. **Configuration Management** (`config_handler.py`)
+   - Configuration file handling
+   - Connected app settings
+   - Environment preferences
+
+### Safety Features
+
+1. **Query Protection**
+   - Read-only operations enforced
+   - Automatic LIMIT 200 for unlimited queries
+   - Required WHERE clause for COUNT queries
+   - Query syntax validation
+
+2. **Authentication Security**
+   - Secure OAuth 2.0 implementation
+   - Session timeout handling
+   - Connected app validation
+   - Environment selection enforcement
+
+## Available Tools
+
+```python
+@tool("mcp_salesforce_login")        # Authentication
+@tool("mcp_salesforce_handle_oauth") # OAuth callback processing
+@tool("mcp_salesforce_logout")       # Session termination
+@tool("mcp_salesforce_query")        # SOQL query execution
+@tool("mcp_salesforce_search")       # SOSL search execution
+```
+
+## Security Features
 - No hardcoded credentials
 - Secure storage using system keychain
 - Per-org Connected Apps
 - Standard OAuth 2.0 security practices
-- Updated query handling and best practices (DML prevention, syntax checks, LIMIT enforcements, Clause enforcements)
+- Updated query handling and best practices:
+  - DML prevention
+  - Syntax checks
+  - LIMIT enforcements
+  - Clause enforcements
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

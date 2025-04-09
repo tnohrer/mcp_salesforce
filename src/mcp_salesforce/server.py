@@ -1,5 +1,6 @@
 """MCP Salesforce Extension for Goose."""
 import logging
+import os
 from typing import Dict, Any, Optional
 import webbrowser
 from mcp.server.fastmcp.server import FastMCP
@@ -162,10 +163,23 @@ class MCPSalesforceExtension(FastMCP):
 
 def run_mcp_server():
     """Run the extension server."""
+    # Create logs directory if it doesn't exist
+    log_dir = os.path.join(os.path.dirname(__file__), 'logs')
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Set up logging to both file and console
+    log_file = os.path.join(log_dir, 'mcp_salesforce.log')
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.DEBUG,  # Set to DEBUG to capture all levels of logs
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            # File handler - logs everything to a file
+            logging.FileHandler(log_file),
+            # Console handler - also show in terminal
+            logging.StreamHandler()
+        ]
     )
+    logger.info(f"Starting MCP Salesforce Extension - Logging to {log_file}")
     extension = MCPSalesforceExtension()
     extension.run()
 

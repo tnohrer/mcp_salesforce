@@ -94,20 +94,20 @@ class LoginHandler:
     def __init__(self):
         logger.debug("Initializing LoginHandler")
         self.sf = None
-        self._state = None
+        self._states = {}  # Dictionary to store multiple states with timestamps
         self._server = None
         self._server_thread = None
         self.client_id = None
         self.callback_url = "http://localhost:8787"
         self.auth_context = AuthContext()
+        self._cleanup_interval = 300  # 5 minutes in seconds
 
     def start_login_flow(self, environment: Optional[str] = None) -> Dict[str, Any]:
         """Start the sequential login flow."""
         try:
-            logger.debug(f"Starting login flow with environment: {environment}")
+            logger.debug("Starting login flow")
             # Initialize state
             self.auth_context = AuthContext(state=AuthState.INITIAL)
-            self.auth_context.environment = environment or 'sandbox'
             
             # Step 1: Check configuration
             self.client_id = self._load_configuration()
@@ -124,7 +124,27 @@ class LoginHandler:
                         "error": "Configuration required. Please configure the Consumer Key."
                     }
             
-            # Step 2: Start OAuth flow (this will handle sandbox selection/login)
+            # Step 2: Show environment selector if no environment provided
+            if not environment:
+                logger.debug("No environment specified, showing selector")
+                from .environment_selector import EnvironmentSelector
+                selector = EnvironmentSelector()
+                selection = selector.show()
+                
+                if not selection:
+                    logger.error("No environment selected")
+                    self.auth_context.update_state(AuthState.ERROR, "No environment selected")
+                    return {
+                        "success": False,
+                        "error": "Environment selection required"
+                    }
+                
+                environment = selection["environment"]
+                logger.debug(f"Environment selected: {environment}")
+            
+            self.auth_context.environment = environment
+            
+            # Step 3: Start OAuth flow
             logger.debug("Starting OAuth flow")
             self.auth_context.update_state(AuthState.OAUTH_FLOW)
             result = self._start_oauth_flow()
@@ -146,28 +166,64 @@ class LoginHandler:
                 "error": str(e)
             }
 
+    def _generate_state(self) -> str:
+        """Generate and store a new state token with timestamp."""
+        state = secrets.token_urlsafe(16)
+        self._states[state] = {
+            'timestamp': time.time(),
+            'used': False
+        }
+        self._cleanup_expired_states()
+        return state
+
+    def _validate_state(self, received_state: str) -> bool:
+        """Validate a received state token."""
+        if received_state not in self._states:
+            return False
+        
+        state_data = self._states[received_state]
+        if state_data['used']:
+            return False
+            
+        # Check if state has expired (5 minute timeout)
+        if time.time() - state_data['timestamp'] > self._cleanup_interval:
+            del self._states[received_state]
+            return False
+            
+        # Mark state as used
+        state_data['used'] = True
+        return True
+
+    def _cleanup_expired_states(self):
+        """Remove expired states."""
+        current_time = time.time()
+        expired_states = [
+            state for state, data in self._states.items()
+            if current_time - data['timestamp'] > self._cleanup_interval or data['used']
+        ]
+        for state in expired_states:
+            del self._states[state]
+
     def _start_oauth_flow(self) -> Dict[str, Any]:
         """Start the OAuth flow."""
         try:
-            self._state = secrets.token_urlsafe(16)
-            logger.debug(f"Generated OAuth state: {self._state}")
+            state = self._generate_state()
+            logger.debug(f"Generated OAuth state: {state}")
             
             # Start callback server first
             self._start_callback_server()
             logger.info("Started OAuth callback server")
             
-            # Build OAuth URL
-            base_urls = {
-                'sandbox': 'https://test.salesforce.com',
-                'production': 'https://login.salesforce.com'
-            }
-            auth_url = f"{base_urls[self.auth_context.environment]}/services/oauth2/authorize"
+            # Build OAuth URL based on selected environment
+            base_url = "https://test.salesforce.com" if self.auth_context.environment == "sandbox" else "https://login.salesforce.com"
+            auth_url = f"{base_url}/services/oauth2/authorize"
+            logger.info(f"Using auth URL for {self.auth_context.environment}: {auth_url}")
             
             params = {
                 'response_type': 'token',
                 'client_id': self.client_id,
                 'redirect_uri': self.callback_url,
-                'state': self._state,
+                'state': state,  # Use new state
                 'scope': 'api full refresh_token',
                 'prompt': 'login consent select_account',
                 'display': 'page'
@@ -244,11 +300,11 @@ class LoginHandler:
                     "error": "Authentication failed - no access token received"
                 }
                 
-            if received_state != self._state:
-                logger.error(f"State mismatch - received: {received_state}, expected: {self._state}")
+            if not received_state or not self._validate_state(received_state):
+                logger.error(f"Invalid state received: {received_state}")
                 return {
                     "success": False,
-                    "error": "Invalid state parameter"
+                    "error": "Invalid state parameter - possible CSRF attempt"
                 }
             
             # Initialize Salesforce client with tokens

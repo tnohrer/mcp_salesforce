@@ -4,13 +4,14 @@ A Salesforce OAuth extension for Goose that allows secure authentication with Sa
 Author: Tristan Nohrer
 
 ## Features
-- Secure OAuth 2.0 implementation
-- Support for sandbox and production orgs
+- Secure OAuth 2.0 implementation with enhanced state management
+- Support for sandbox and production orgs with improved environment selection
 - Secure credential storage using system keychain
 - Per-org Connected App support
 - Query Best Practice
 - Query Warnings and Limits
 - DML Restriction
+- Improved logging and debugging capabilities
 
 ## Setup Instructions
 
@@ -46,9 +47,9 @@ git clone https://github.com/tnohrer/mcp_salesforce.git
 2. Install dependencies:
 ```bash
 cd mcp_salesforce
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 3. Configure the extension in Goose:
@@ -93,6 +94,8 @@ pip install -r requirements.txt
         ├── query_validator.py     # Query validation and safety
         ├── salesforce.py          # Core Salesforce interaction
         ├── server.py              # FastMCP integration
+        ├── logs/                  # Log directory
+        │   └── mcp_salesforce.log # Application logs
         └── templates/             # UI templates
             ├── environment_selector.html
             └── oauth_callback.html
@@ -104,6 +107,7 @@ pip install -r requirements.txt
    - Main extension implementation using FastMCP
    - Tool registration and endpoint handling
    - Response formatting and error management
+   - Enhanced logging configuration
 
 2. **Salesforce Integration** (`salesforce.py`)
    - Core Salesforce API interaction
@@ -112,8 +116,8 @@ pip install -r requirements.txt
 
 3. **Authentication System**
    - `auth_state.py`: Manages authentication state and sessions
-   - `login_handler.py`: Implements OAuth flow
-   - `environment_selector.py`: Provides environment selection UI
+   - `login_handler.py`: Implements OAuth flow with improved state management
+   - `environment_selector.py`: Provides enhanced environment selection UI
    - Templates for login and callback pages
 
 4. **Query Management** (`query_validator.py`)
@@ -136,7 +140,9 @@ pip install -r requirements.txt
    - Query syntax validation
 
 2. **Authentication Security**
-   - Secure OAuth 2.0 implementation
+   - Enhanced OAuth 2.0 implementation with improved state management
+   - Secure state token generation and validation
+   - Protection against CSRF attacks
    - Session timeout handling
    - Connected app validation
    - Environment selection enforcement
@@ -155,7 +161,8 @@ pip install -r requirements.txt
 - No hardcoded credentials
 - Secure storage using system keychain
 - Per-org Connected Apps
-- Standard OAuth 2.0 security practices
+- Enhanced OAuth 2.0 security practices
+- Improved state management with CSRF protection
 - Updated query handling and best practices:
   - DML prevention
   - Syntax checks

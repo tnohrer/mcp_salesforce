@@ -51,6 +51,7 @@ python3 -m venv .venv
 source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
 python3 -m pip install -r requirements.txt
 ```
+If you get the error "packages do not match" - try disabling your VPN
 
 3. Configure the extension in Goose:
    - Add the extension path to your Goose configuration

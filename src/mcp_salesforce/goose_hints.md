@@ -5,7 +5,7 @@
 ### Counting Records
 When counting records in SOQL queries:
 - Always use `COUNT(Id)` instead of `COUNT()`
-- Example: `SELECT COUNT(Id) total FROM Case WHERE Id != null`
+- Example: `SELECT COUNT(Id) total FROM Case`
 - Incorrect: `SELECT COUNT() FROM Case`
 
 ### Aggregate Queries

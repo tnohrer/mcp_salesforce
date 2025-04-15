@@ -14,10 +14,23 @@ class MCPSalesforceExtension(FastMCP):
 
     def __init__(self):
         """Initialize the extension."""
+        # Read the hints file
+        hints_path = os.path.join(os.path.dirname(__file__), 'goose_hints.md')
+        with open(hints_path, 'r') as f:
+            hints_content = f.read()
+        
+        # Add hints to system instructions
+        system_instructions = f"""MCP Salesforce Extension.
+        
+Salesforce Query Best Practices and Hints:
+{hints_content}
+"""
+        
         super().__init__(
             name="mcp_salesforce",
             display_name="MCP Salesforce",
             description="Salesforce integration for Goose - Read-only operations",
+            system_instructions=system_instructions,  # Add this line
         )
         self.login_handler = LoginHandler()
         self._setup_tools()

@@ -6,6 +6,7 @@ import webbrowser
 from mcp.server.fastmcp.server import FastMCP
 from simple_salesforce import Salesforce
 from .login_handler import LoginHandler
+from .query_validator import QueryValidator
 
 logger = logging.getLogger(__name__)
 
@@ -19,18 +20,21 @@ class MCPSalesforceExtension(FastMCP):
         with open(hints_path, 'r') as f:
             hints_content = f.read()
         
-        # Add hints to system instructions
+        # Create comprehensive system instructions with hints
         system_instructions = f"""MCP Salesforce Extension.
-        
-Salesforce Query Best Practices and Hints:
+
+IMPORTANT: Always follow these query patterns and best practices for any SOQL query:
+
 {hints_content}
+
+These patterns must be followed for every query. Validate all queries against these patterns before execution.
 """
         
         super().__init__(
             name="mcp_salesforce",
             display_name="MCP Salesforce",
             description="Salesforce integration for Goose - Read-only operations",
-            system_instructions=system_instructions,  # Add this line
+            system_instructions=system_instructions,
         )
         self.login_handler = LoginHandler()
         self._setup_tools()
@@ -96,24 +100,16 @@ Salesforce Query Best Practices and Hints:
                         "error": "Not authenticated. Please login first using mcp_salesforce_login"
                     }
 
-                # Query safety checks
-                soql_upper = soql.upper().strip()
-                
-                # Ensure this is a SELECT query
-                if not soql_upper.startswith('SELECT'):
+                # Use QueryValidator for comprehensive validation
+                is_valid, error_message = QueryValidator.validate_query(soql)
+                if not is_valid:
                     return {
                         "success": False,
-                        "error": "Only SELECT queries are allowed. DML operations are not permitted."
-                    }
-                
-                # Check for COUNT queries without WHERE
-                if 'COUNT(' in soql_upper and 'WHERE' not in soql_upper:
-                    return {
-                        "success": False,
-                        "error": "COUNT queries must include a WHERE clause for performance reasons."
+                        "error": error_message
                     }
                 
                 # Add LIMIT if not present and not a COUNT query
+                soql_upper = soql.upper().strip()
                 if 'LIMIT' not in soql_upper and 'COUNT(' not in soql_upper:
                     soql = f"{soql.rstrip()} LIMIT 200"
                     logger.info(f"Added LIMIT clause. Modified query: {soql}")

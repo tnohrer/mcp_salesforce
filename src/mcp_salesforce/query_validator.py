@@ -22,9 +22,10 @@ class QueryValidator:
         if not soql_upper.startswith('SELECT'):
             return False, "Only SELECT queries are allowed. DML operations are not permitted."
             
-        # Check for any forbidden operations
+        # Check for any forbidden operations using word boundaries
         for operation in QueryValidator.FORBIDDEN_OPERATIONS:
-            if operation in soql_upper:
+            # Use word boundaries \b to match whole words only
+            if re.search(rf'\b{operation}\b', soql_upper):
                 return False, f"{operation} operations are not permitted. Only SELECT queries are allowed."
             
         # Check for COUNT queries

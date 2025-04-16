@@ -13,6 +13,14 @@
             "keyring>=24.3.0"
         ]
     },
+    "resources": [
+        {
+            "name": "goose_hints",
+            "path": "src/mcp_salesforce/goose_hints.md",
+            "description": "SOQL query patterns and best practices",
+            "type": "text/markdown"
+        }
+    ],
     "tools": [
         {
             "name": "mcp_salesforce_login",
